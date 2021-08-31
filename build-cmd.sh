@@ -46,7 +46,6 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DBUILD_SHARED_LIBS=OFF \
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
-                  -DMZ_BUILD_UNIT_TESTS=ON \
                   -DMZ_FETCH_LIBS=OFF\
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
@@ -80,7 +79,6 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DBUILD_SHARED_LIBS=OFF \
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
-                  -DMZ_BUILD_UNIT_TESTS=ON \
                   -DMZ_FETCH_LIBS=OFF \
                   -DMZ_OPENSSL=OFF \
                   -DMZ_LIBBSD=OFF \
@@ -144,7 +142,6 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DBUILD_SHARED_LIBS=OFF \
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
-                  -DMZ_BUILD_UNIT_TESTS=ON \
                   -DMZ_FETCH_LIBS=OFF \
                   -DMZ_OPENSSL=OFF \
                   -DMZ_LIBBSD=OFF \
