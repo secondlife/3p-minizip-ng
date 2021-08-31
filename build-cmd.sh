@@ -44,8 +44,9 @@ pushd "$MINIZLIB_SOURCE_DIR"
 
             cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" . \
                   -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT:BOOL=ON \
+                  -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
+                  -DMZ_BUILD_UNIT_TESTS=ON \
                   -DMZ_FETCH_LIBS=OFF\
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
@@ -68,15 +69,6 @@ pushd "$MINIZLIB_SOURCE_DIR"
         # ------------------------- darwin, darwin64 -------------------------
         darwin*)
 
-            case "$AUTOBUILD_ADDRSIZE" in
-                32)
-                    cfg_sw=
-                    ;;
-                64)
-                    cfg_sw="--64"
-                    ;;
-            esac
-
             opts="${TARGET_OPTS:--arch $AUTOBUILD_CONFIGURE_ARCH $LL_BUILD_RELEASE}"
 
             mkdir -p "$stage/lib/release"
@@ -85,12 +77,16 @@ pushd "$MINIZLIB_SOURCE_DIR"
             cmake ../${MINIZLIB_SOURCE_DIR} -GXcode \
                   -DCMAKE_C_FLAGS:STRING="$opts" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
-                  -DBUILD_SHARED_LIBS:bool=off' \
-                  -DMZ_COMPAT:BOOL=ON \
+                  -DBUILD_SHARED_LIBS=OFF \
+                  -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF\
+                  -DMZ_BUILD_UNIT_TESTS=ON \
+                  -DMZ_FETCH_LIBS=OFF \
+                  -DMZ_OPENSSL=OFF \
+                  -DMZ_LIBBSD=OFF \
+                  -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
+                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
 
             cmake --build . --config Release
 
@@ -142,19 +138,32 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 export CPPFLAGS="$TARGET_CPPFLAGS"
             fi
 
-            # Release
-            CFLAGS="$opts" CXXFLAGS="$opts" \
-                ./configure --prefix="$stage" --includedir="$stage/include/zlib-ng" --libdir="$stage/lib/release" --zlib-compat
-            make
-            make install
+            cmake ../${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
+                  -DCMAKE_C_FLAGS:STRING="$opts" \
+                  -DCMAKE_CXX_FLAGS:STRING="$opts" \
+                  -DBUILD_SHARED_LIBS=OFF \
+                  -DMZ_COMPAT=ON \
+                  -DMZ_BUILD_TEST=ON \
+                  -DMZ_BUILD_UNIT_TESTS=ON \
+                  -DMZ_FETCH_LIBS=OFF \
+                  -DMZ_OPENSSL=OFF \
+                  -DMZ_LIBBSD=OFF \
+                  -DCMAKE_INSTALL_PREFIX=$stage \
+                  -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
+                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
+
+            cmake --build . --config Release
 
             # conditionally run unit tests
             if [ "${DISABLE_UNIT_TESTS:-0}" = "0" ]; then
-                make test
+                ctest -C Release
             fi
 
-            # clean the build artifacts
-            make distclean
+            mkdir -p "$stage/lib/release"
+            cp -a Release/libminizip*.a* "${stage}/lib/release/"
+
+            mkdir -p "$stage/include/minizip-ng"
+            cp -a *.h "$stage/include/minizip-ng"
         ;;
     esac
 
