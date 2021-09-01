@@ -82,6 +82,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_FETCH_LIBS=OFF \
                   -DMZ_OPENSSL=OFF \
                   -DMZ_LIBBSD=OFF \
+                  -DMZ_LZMA=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
@@ -145,6 +146,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_FETCH_LIBS=OFF \
                   -DMZ_OPENSSL=OFF \
                   -DMZ_LIBBSD=OFF \
+                  -DMZ_LZMA=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
