@@ -94,6 +94,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_PKCRYPT=OFF \
                   -DMZ_SIGNING=OFF \
                   -DMZ_WZAES=OFF \
+                  -DMZ_LIBCOMP=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
