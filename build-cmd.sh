@@ -47,6 +47,13 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
                   -DMZ_FETCH_LIBS=OFF\
+                  -DMZ_BZIP2=OFF \
+                  -DMZ_LIBBSD=OFF \
+                  -DMZ_LZMA=OFF \
+                  -DMZ_OPENSSL=OFF \
+                  -DMZ_PKCRYPT=OFF \
+                  -DMZ_SIGNING=OFF \
+                  -DMZ_WZAES=OFF \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
 
@@ -80,9 +87,13 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
                   -DMZ_FETCH_LIBS=OFF \
-                  -DMZ_OPENSSL=OFF \
+                  -DMZ_BZIP2=OFF \
                   -DMZ_LIBBSD=OFF \
                   -DMZ_LZMA=OFF \
+                  -DMZ_OPENSSL=OFF \
+                  -DMZ_PKCRYPT=OFF \
+                  -DMZ_SIGNING=OFF \
+                  -DMZ_WZAES=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
@@ -144,9 +155,13 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
                   -DMZ_FETCH_LIBS=OFF \
-                  -DMZ_OPENSSL=OFF \
+                  -DMZ_BZIP2=OFF \
                   -DMZ_LIBBSD=OFF \
                   -DMZ_LZMA=OFF \
+                  -DMZ_OPENSSL=OFF \
+                  -DMZ_PKCRYPT=OFF \
+                  -DMZ_SIGNING=OFF \
+                  -DMZ_WZAES=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
