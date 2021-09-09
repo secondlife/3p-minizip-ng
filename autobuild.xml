@@ -12,7 +12,7 @@
         <key>description</key>
         <string>zlib data compression library for the next generation systems</string>
         <key>license</key>
-        <string>zlib</string>
+        <string>zlib-ng</string>
         <key>license_file</key>
         <string>LICENSES/zlib-ng.txt</string>
         <key>name</key>
@@ -24,9 +24,9 @@
             <key>archive</key>
             <map>
               <key>hash</key>
-              <string>978934d8ee9fa44cfcbf0fc6952733f9</string>
+              <string>bf306e38bf81c6095e0967bdef6a2445</string>
               <key>url</key>
-              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/86979/801678/zlib_ng-2.0.5.563353-darwin64-563353.tar.bz2</string>
+              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/87759/805718/zlib_ng-2.0.5.563838-darwin64-563838.tar.bz2</string>
             </map>
             <key>name</key>
             <string>darwin64</string>
@@ -36,9 +36,9 @@
             <key>archive</key>
             <map>
               <key>hash</key>
-              <string>abbfde54d943fb999db9b98ee5850cb4</string>
+              <string>8ffce5bd00e3d5afa8cb39b855237c4a</string>
               <key>url</key>
-              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/86980/801690/zlib_ng-2.0.5.563353-windows-563353.tar.bz2</string>
+              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/87761/805730/zlib_ng-2.0.5.563838-windows-563838.tar.bz2</string>
             </map>
             <key>name</key>
             <string>windows</string>
@@ -48,16 +48,16 @@
             <key>archive</key>
             <map>
               <key>hash</key>
-              <string>b038b8dd39273494668f90cdbfa35332</string>
+              <string>bd103a9129e57f7ea35886bc7750f8a6</string>
               <key>url</key>
-              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/86981/801689/zlib_ng-2.0.5.563353-windows64-563353.tar.bz2</string>
+              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/87760/805729/zlib_ng-2.0.5.563838-windows64-563838.tar.bz2</string>
             </map>
             <key>name</key>
             <string>windows64</string>
           </map>
         </map>
         <key>version</key>
-        <string>2.0.5.563353</string>
+        <string>2.0.5.563838</string>
       </map>
     </map>
     <key>package_description</key>
@@ -69,7 +69,7 @@
       <key>description</key>
       <string>minizip-ng is a zip manipulation library. Based on work of Gilles Vollant.</string>
       <key>license</key>
-      <string>minizip</string>
+      <string>minizip-ng</string>
       <key>license_file</key>
       <string>LICENSES/minizip-ng.txt</string>
       <key>name</key>

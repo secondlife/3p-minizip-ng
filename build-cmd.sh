@@ -31,7 +31,7 @@ source_environment_tempfile="$stage/source_environment.sh"
 . "$source_environment_tempfile"
 
 VERSION_HEADER_FILE="$MINIZLIB_SOURCE_DIR/mz.h"
-version=$(sed -n -E 's/#define MZ_VERSION "([0-9.]+)"/\1/p' "${VERSION_HEADER_FILE}")
+version=$(sed -n -E 's/#define MZ_VERSION[ ]+[(]"([0-9.]+)"[)]/\1/p' "${VERSION_HEADER_FILE}")
 build=${AUTOBUILD_BUILD_ID:=0}
 echo "${version}.${build}" > "${stage}/VERSION.txt"
 
