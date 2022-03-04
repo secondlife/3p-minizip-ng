@@ -41,7 +41,7 @@
               <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/87759/805718/[placeholderforyourbuild]</string>
             </map>
             <key>name</key>
-            <string>darwin64</string>
+            <string>linux64</string>
           </map>
           <key>windows</key>
           <map>
