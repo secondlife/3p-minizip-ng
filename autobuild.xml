@@ -31,6 +31,18 @@
             <key>name</key>
             <string>darwin64</string>
           </map>
+          <key>linux64</key>
+          <map>
+            <key>archive</key>
+            <map>
+              <key>hash</key>
+              <string>c0ac02d44409dd8c7f69a06580fa3a8c</string>
+              <key>url</key>
+              <string>https://automated-builds-secondlife-com.s3.amazonaws.com/ct2/87759/805718/[placeholderforyourbuild]</string>
+            </map>
+            <key>name</key>
+            <string>darwin64</string>
+          </map>
           <key>windows</key>
           <map>
             <key>archive</key>

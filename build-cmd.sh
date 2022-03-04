@@ -137,6 +137,11 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 export CXX=/usr/bin/g++-4.6
             fi
 
+	    # Prefer out of source builds
+	    rm -rf build
+	    mkdir -p build
+	    pushd build
+	    
             # Default target per autobuild build --address-size
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
@@ -149,7 +154,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 export CPPFLAGS="$TARGET_CPPFLAGS"
             fi
 
-            cmake ../${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
+            cmake ${top}/${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
                   -DCMAKE_C_FLAGS:STRING="$opts" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
                   -DBUILD_SHARED_LIBS=OFF \
@@ -164,21 +169,23 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_SIGNING=OFF \
                   -DMZ_WZAES=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
-                  -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
+                  -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
+                  -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
 
-            cmake --build . --config Release
+            cmake --build . --parallel 8  --config Release
 
             # conditionally run unit tests
-            if [ "${DISABLE_UNIT_TESTS:-0}" = "0" ]; then
+            if [ "${DISABLE_UNIT_TESTS:-0}" -eq 0 ]; then
                 ctest -C Release
             fi
 
             mkdir -p "$stage/lib/release"
-            cp -a Release/libminizip*.a* "${stage}/lib/release/"
+            cp -a libminizip*.a* "${stage}/lib/release/"
 
             mkdir -p "$stage/include/minizip-ng"
-            cp -a *.h "$stage/include/minizip-ng"
+            cp -a ${top}/${MINIZLIB_SOURCE_DIR}/*.h "$stage/include/minizip-ng"
+
+	    popd
         ;;
     esac
 
