@@ -140,11 +140,11 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 export CXX=/usr/bin/g++-4.6
             fi
 
-	    # Prefer out of source builds
-	    rm -rf build
-	    mkdir -p build
-	    pushd build
-	    
+            # Prefer out of source builds
+            rm -rf build
+            mkdir -p build
+            pushd build
+        
             # Default target per autobuild build --address-size
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
@@ -188,7 +188,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             mkdir -p "$stage/include/minizip-ng"
             cp -a ${top}/${MINIZLIB_SOURCE_DIR}/*.h "$stage/include/minizip-ng"
 
-	    popd
+        popd
         ;;
     esac
 
