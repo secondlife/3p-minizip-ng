@@ -30,6 +30,9 @@ source_environment_tempfile="$stage/source_environment.sh"
 "$autobuild" source_environment > "$source_environment_tempfile"
 . "$source_environment_tempfile"
 
+# remove_cxxstd
+source "$(dirname "$AUTOBUILD_VARIABLES_FILE")/functions"
+
 VERSION_HEADER_FILE="$MINIZLIB_SOURCE_DIR/mz.h"
 version=$(sed -n -E 's/#define MZ_VERSION[ ]+[(]"([0-9.]+)"[)]/\1/p' "${VERSION_HEADER_FILE}")
 build=${AUTOBUILD_BUILD_ID:=0}
@@ -81,7 +84,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             rm -rf Resources/ ../Resources tests/Resources/
 
             cmake ../${MINIZLIB_SOURCE_DIR} -GXcode \
-                  -DCMAKE_C_FLAGS:STRING="$opts" \
+                  -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
                   -DBUILD_SHARED_LIBS=OFF \
                   -DMZ_COMPAT=ON \
@@ -155,7 +158,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             fi
 
             cmake ${top}/${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
-                  -DCMAKE_C_FLAGS:STRING="$opts" \
+                  -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
                   -DBUILD_SHARED_LIBS=OFF \
                   -DMZ_COMPAT=ON \
