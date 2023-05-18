@@ -45,7 +45,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
         windows*)
             load_vsvars
 
-            cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" . \
+            cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_VSPLATFORM" . \
                   -DBUILD_SHARED_LIBS=OFF \
                   -DMZ_COMPAT=ON \
                   -DMZ_BUILD_TEST=ON \
