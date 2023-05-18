@@ -85,7 +85,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             # with '-target x86_64-apple-macos11.7' [-Woverriding-t-option]
             # We didn't specify -target explicitly before; try setting it.
             # (_find and _test_re from build-variables/functions script)
-            if idx=$(_find _test_re "-mmacosx-version-min=.*" "$opts")
+            if idx=$(_find _test_re "-mmacosx-version-min=.*" $opts)
             then
                 versw="${opts[$idx]}"
                 minver="${versw%*=}"
