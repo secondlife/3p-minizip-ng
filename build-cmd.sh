@@ -57,6 +57,8 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_PKCRYPT=OFF \
                   -DMZ_SIGNING=OFF \
                   -DMZ_WZAES=OFF \
+                  -DMZ_ZLIB=ON \
+                  -DMZ_ZSTD=OFF \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
 
