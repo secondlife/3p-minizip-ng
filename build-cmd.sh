@@ -99,8 +99,8 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DMZ_WZAES=OFF \
                   -DMZ_LIBCOMP=OFF \
                   -DCMAKE_INSTALL_PREFIX=$stage \
-                  -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
+                  -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
+                  -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
 
             cmake --build . --config Release
 
