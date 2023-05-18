@@ -87,9 +87,11 @@ pushd "$MINIZLIB_SOURCE_DIR"
             # (_find and _test_re from build-variables/functions script)
             if idx=$(_find _test_re "-mmacosx-version-min=.*" $opts)
             then
-                versw="${opts[$idx]}"
+                optarray=($opts)
+                versw="${optarray[$idx]}"
                 minver="${versw%*=}"
-                opts+=(-target "x86_64-apple-macos$minver")
+                optarray+=(-target "x86_64-apple-macos$minver")
+                opts="${optarray[*]}"
             fi
 
             mkdir -p "$stage/lib/release"
