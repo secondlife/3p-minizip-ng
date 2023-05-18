@@ -89,7 +89,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             then
                 optarray=($opts)
                 versw="${optarray[$idx]}"
-                minver="${versw%*=}"
+                minver="${versw#*=}"
                 optarray+=(-target "x86_64-apple-macos$minver")
                 opts="${optarray[*]}"
             fi
