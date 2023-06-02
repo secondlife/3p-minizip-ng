@@ -38,6 +38,24 @@ version=$(sed -n -E 's/#define MZ_VERSION[ ]+[(]"([0-9.]+)"[)]/\1/p' "${VERSION_
 build=${AUTOBUILD_BUILD_ID:=0}
 echo "${version}.${build}" > "${stage}/VERSION.txt"
 
+# CMake configuration options for all platforms
+config=( \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DMZ_BUILD_TESTS=ON \
+    -DMZ_BZIP2=OFF \
+    -DMZ_COMPAT=ON \
+    -DMZ_FETCH_LIBS=OFF \
+    -DMZ_ICONV=OFF \
+    -DMZ_LIBBSD=OFF \
+    -DMZ_LIBCOMP=OFF \
+    -DMZ_LZMA=OFF \
+    -DMZ_OPENSSL=OFF \
+    -DMZ_PKCRYPT=OFF \
+    -DMZ_SIGNING=OFF \
+    -DMZ_WZAES=OFF \
+    -DMZ_ZSTD=OFF \
+    )
+
 pushd "$MINIZLIB_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
 
@@ -46,17 +64,9 @@ pushd "$MINIZLIB_SOURCE_DIR"
             load_vsvars
 
             cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_VSPLATFORM" . \
-                  -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT=ON \
-                  -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF\
-                  -DMZ_BZIP2=OFF \
-                  -DMZ_LIBBSD=OFF \
-                  -DMZ_LZMA=OFF \
-                  -DMZ_OPENSSL=OFF \
-                  -DMZ_PKCRYPT=OFF \
-                  -DMZ_SIGNING=OFF \
-                  -DMZ_WZAES=OFF \
+                  -DCMAKE_C_FLAGS:STRING="$LL_BUILD_RELEASE" \
+                  -DCMAKE_CXX_FLAGS:STRING="$LL_BUILD_RELEASE" \
+                  "${config[@]}" \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
 
@@ -100,18 +110,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             cmake ../${MINIZLIB_SOURCE_DIR} -GXcode \
                   -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
-                  -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT=ON \
-                  -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF \
-                  -DMZ_BZIP2=OFF \
-                  -DMZ_LIBBSD=OFF \
-                  -DMZ_LZMA=OFF \
-                  -DMZ_OPENSSL=OFF \
-                  -DMZ_PKCRYPT=OFF \
-                  -DMZ_SIGNING=OFF \
-                  -DMZ_WZAES=OFF \
-                  -DMZ_LIBCOMP=OFF \
+                  "${config[@]}" \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
@@ -174,17 +173,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             cmake ${top}/${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
                   -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
-                  -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT=ON \
-                  -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF \
-                  -DMZ_BZIP2=OFF \
-                  -DMZ_LIBBSD=OFF \
-                  -DMZ_LZMA=OFF \
-                  -DMZ_OPENSSL=OFF \
-                  -DMZ_PKCRYPT=OFF \
-                  -DMZ_SIGNING=OFF \
-                  -DMZ_WZAES=OFF \
+                  "${config[@]}" \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
