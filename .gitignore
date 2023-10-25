@@ -1,7 +1,8 @@
 stage/
 zlib-ng/WIN
+minizip-ng/unzip.h
+minizip-ng/zip.h
 minizip-ng/build
 
 *.exe
 *.bz2
-

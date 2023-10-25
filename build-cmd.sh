@@ -30,10 +30,31 @@ source_environment_tempfile="$stage/source_environment.sh"
 "$autobuild" source_environment > "$source_environment_tempfile"
 . "$source_environment_tempfile"
 
+# remove_cxxstd
+source "$(dirname "$AUTOBUILD_VARIABLES_FILE")/functions"
+
 VERSION_HEADER_FILE="$MINIZLIB_SOURCE_DIR/mz.h"
 version=$(sed -n -E 's/#define MZ_VERSION[ ]+[(]"([0-9.]+)"[)]/\1/p' "${VERSION_HEADER_FILE}")
 build=${AUTOBUILD_BUILD_ID:=0}
 echo "${version}.${build}" > "${stage}/VERSION.txt"
+
+# CMake configuration options for all platforms
+config=( \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DMZ_BUILD_TESTS=ON \
+    -DMZ_BZIP2=OFF \
+    -DMZ_COMPAT=ON \
+    -DMZ_FETCH_LIBS=OFF \
+    -DMZ_ICONV=OFF \
+    -DMZ_LIBBSD=OFF \
+    -DMZ_LIBCOMP=OFF \
+    -DMZ_LZMA=OFF \
+    -DMZ_OPENSSL=OFF \
+    -DMZ_PKCRYPT=OFF \
+    -DMZ_SIGNING=OFF \
+    -DMZ_WZAES=OFF \
+    -DMZ_ZSTD=OFF \
+    )
 
 pushd "$MINIZLIB_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
@@ -42,18 +63,10 @@ pushd "$MINIZLIB_SOURCE_DIR"
         windows*)
             load_vsvars
 
-            cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" . \
-                  -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT=ON \
-                  -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF\
-                  -DMZ_BZIP2=OFF \
-                  -DMZ_LIBBSD=OFF \
-                  -DMZ_LZMA=OFF \
-                  -DMZ_OPENSSL=OFF \
-                  -DMZ_PKCRYPT=OFF \
-                  -DMZ_SIGNING=OFF \
-                  -DMZ_WZAES=OFF \
+            cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_VSPLATFORM" . \
+                  -DCMAKE_C_FLAGS:STRING="$LL_BUILD_RELEASE" \
+                  -DCMAKE_CXX_FLAGS:STRING="$LL_BUILD_RELEASE" \
+                  "${config[@]}" \
                   -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
 
@@ -77,27 +90,30 @@ pushd "$MINIZLIB_SOURCE_DIR"
 
             opts="${TARGET_OPTS:--arch $AUTOBUILD_CONFIGURE_ARCH $LL_BUILD_RELEASE}"
 
+            # As of version 3.0.2 (2023-05-18), we get:
+            # clang: warning: overriding '-mmacosx-version-min=10.13' option
+            # with '-target x86_64-apple-macos11.7' [-Woverriding-t-option]
+            # We didn't specify -target explicitly before; try setting it.
+            # (_find and _test_re from build-variables/functions script)
+            if idx=$(_find _test_re "-mmacosx-version-min=.*" $opts)
+            then
+                optarray=($opts)
+                versw="${optarray[$idx]}"
+                minver="${versw#*=}"
+                optarray+=(-target "x86_64-apple-macos$minver")
+                opts="${optarray[*]}"
+            fi
+
             mkdir -p "$stage/lib/release"
             rm -rf Resources/ ../Resources tests/Resources/
 
             cmake ../${MINIZLIB_SOURCE_DIR} -GXcode \
-                  -DCMAKE_C_FLAGS:STRING="$opts" \
+                  -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
-                  -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT=ON \
-                  -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF \
-                  -DMZ_BZIP2=OFF \
-                  -DMZ_LIBBSD=OFF \
-                  -DMZ_LZMA=OFF \
-                  -DMZ_OPENSSL=OFF \
-                  -DMZ_PKCRYPT=OFF \
-                  -DMZ_SIGNING=OFF \
-                  -DMZ_WZAES=OFF \
-                  -DMZ_LIBCOMP=OFF \
+                  "${config[@]}" \
                   -DCMAKE_INSTALL_PREFIX=$stage \
-                  -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/libz.a"
+                  -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
+                  -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
 
             cmake --build . --config Release
 
@@ -137,11 +153,11 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 export CXX=/usr/bin/g++-4.6
             fi
 
-	    # Prefer out of source builds
-	    rm -rf build
-	    mkdir -p build
-	    pushd build
-	    
+            # Prefer out of source builds
+            rm -rf build
+            mkdir -p build
+            pushd build
+        
             # Default target per autobuild build --address-size
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
@@ -155,19 +171,9 @@ pushd "$MINIZLIB_SOURCE_DIR"
             fi
 
             cmake ${top}/${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
-                  -DCMAKE_C_FLAGS:STRING="$opts" \
+                  -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
-                  -DBUILD_SHARED_LIBS=OFF \
-                  -DMZ_COMPAT=ON \
-                  -DMZ_BUILD_TEST=ON \
-                  -DMZ_FETCH_LIBS=OFF \
-                  -DMZ_BZIP2=OFF \
-                  -DMZ_LIBBSD=OFF \
-                  -DMZ_LZMA=OFF \
-                  -DMZ_OPENSSL=OFF \
-                  -DMZ_PKCRYPT=OFF \
-                  -DMZ_SIGNING=OFF \
-                  -DMZ_WZAES=OFF \
+                  "${config[@]}" \
                   -DCMAKE_INSTALL_PREFIX=$stage \
                   -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
@@ -185,7 +191,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
             mkdir -p "$stage/include/minizip-ng"
             cp -a ${top}/${MINIZLIB_SOURCE_DIR}/*.h "$stage/include/minizip-ng"
 
-	    popd
+        popd
         ;;
     esac
 
