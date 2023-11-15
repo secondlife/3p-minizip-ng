@@ -77,6 +77,11 @@ pushd "$MINIZLIB_SOURCE_DIR"
 
             opts="${TARGET_OPTS:--arch $AUTOBUILD_CONFIGURE_ARCH $LL_BUILD_RELEASE}"
 
+            # As of version 3.0.2 (2023-05-18), we get:
+            # clang: warning: overriding '-mmacosx-version-min=10.13' option
+            # with '-target x86_64-apple-macos11.7' [-Woverriding-t-option]
+            opts="$(set_target $opts)"
+
             mkdir -p "$stage/lib/release"
             rm -rf Resources/ ../Resources tests/Resources/
 
