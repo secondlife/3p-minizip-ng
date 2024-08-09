@@ -93,6 +93,8 @@
       <string>LICENSES/minizip-ng.txt</string>
       <key>name</key>
       <string>minizip-ng</string>
+      <key>use_scm_version</key>
+      <boolean>true</boolean>
       <key>platforms</key>
       <map>
         <key>common</key>
@@ -187,14 +189,12 @@
           </map>
           <key>manifest</key>
           <array>
-            <string>lib/release/libminizip.lib</string>
+            <string>lib/release/minizip.lib</string>
           </array>
           <key>name</key>
           <string>windows</string>
         </map>
       </map>
-      <key>version_file</key>
-      <string>VERSION.txt</string>
     </map>
     <key>type</key>
     <string>autobuild</string>
