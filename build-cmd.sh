@@ -33,25 +33,21 @@ source_environment_tempfile="$stage/source_environment.sh"
 # remove_cxxstd
 source "$(dirname "$AUTOBUILD_VARIABLES_FILE")/functions"
 
-VERSION_HEADER_FILE="$MINIZLIB_SOURCE_DIR/mz.h"
-version=$(sed -n -E 's/#define MZ_VERSION[ ]+[(]"([0-9.]+)"[)]/\1/p' "${VERSION_HEADER_FILE}")
-build=${AUTOBUILD_BUILD_ID:=0}
-echo "${version}.${build}" > "${stage}/VERSION.txt"
-
 # CMake configuration options for all platforms
 config=( \
     -DBUILD_SHARED_LIBS=OFF \
     -DMZ_BUILD_TESTS=ON \
+    -DMZ_BUILD_UNIT_TESTS=ON \
     -DMZ_BZIP2=OFF \
     -DMZ_COMPAT=ON \
     -DMZ_FETCH_LIBS=OFF \
+    -DMZ_FORCE_FETCH_LIBS=OFF \
     -DMZ_ICONV=OFF \
     -DMZ_LIBBSD=OFF \
     -DMZ_LIBCOMP=OFF \
     -DMZ_LZMA=OFF \
     -DMZ_OPENSSL=OFF \
     -DMZ_PKCRYPT=OFF \
-    -DMZ_SIGNING=OFF \
     -DMZ_WZAES=OFF \
     -DMZ_ZSTD=OFF \
     )
@@ -63,13 +59,19 @@ pushd "$MINIZLIB_SOURCE_DIR"
         windows*)
             load_vsvars
 
-            cmake -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_VSPLATFORM" . \
-                  -DCMAKE_C_FLAGS:STRING="$LL_BUILD_RELEASE" \
-                  -DCMAKE_CXX_FLAGS:STRING="$LL_BUILD_RELEASE" \
-                  "${config[@]}" \
-                  -DZLIB_INCLUDE_DIRS="$(cygpath -m $stage)/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$(cygpath -m $stage)/packages/lib/release/zlib.lib"
+            opts="$(replace_switch /Zi /Z7 $LL_BUILD_RELEASE)"
+            plainopts="$(remove_switch /GR $(remove_cxxstd $opts))"
 
+            mkdir -p "build"
+            pushd "build"
+            cmake $(cygpath -m ${top}/${MINIZLIB_SOURCE_DIR}) -G "Ninja Multi-Config" \
+                  -DCMAKE_C_FLAGS:STRING="$plainopts" \
+                  -DCMAKE_CXX_FLAGS:STRING="$opts" \
+                  "${config[@]}" \
+                  -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage) \
+                  -DCMAKE_INSTALL_LIBDIR="$(cygpath -m "$stage/lib/release")" \
+                  -DZLIB_INCLUDE_DIR="$(cygpath -m "$stage/packages/include/zlib-ng/")" \
+                  -DZLIB_LIBRARY="$(cygpath -m "$stage/packages/lib/release/zlib.lib")"
 
             cmake --build . --config Release
 
@@ -78,42 +80,32 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 ctest -C Release
             fi
 
-            mkdir -p "$stage/lib/release"
-            cp -a "Release/libminizip.lib" "$stage/lib/release/"
+            cmake --install . --config Release
 
-            mkdir -p "$stage/include/minizip-ng"
-            cp -a *.h "$stage/include/minizip-ng"
+            mkdir -p $stage/include/minizip-ng
+            mv $stage/include/minizip/*.h "$stage/include/minizip-ng/"
+            popd
         ;;
 
         # ------------------------- darwin, darwin64 -------------------------
         darwin*)
+            mkdir -p "build"
+            pushd "build"
+
+            export MACOSX_DEPLOYMENT_TARGET="$LL_BUILD_DARWIN_DEPLOY_TARGET"
 
             opts="${TARGET_OPTS:--arch $AUTOBUILD_CONFIGURE_ARCH $LL_BUILD_RELEASE}"
 
-            # As of version 3.0.2 (2023-05-18), we get:
-            # clang: warning: overriding '-mmacosx-version-min=10.13' option
-            # with '-target x86_64-apple-macos11.7' [-Woverriding-t-option]
-            # We didn't specify -target explicitly before; try setting it.
-            # (_find and _test_re from build-variables/functions script)
-            if idx=$(_find _test_re "-mmacosx-version-min=.*" $opts)
-            then
-                optarray=($opts)
-                versw="${optarray[$idx]}"
-                minver="${versw#*=}"
-                optarray+=(-target "x86_64-apple-macos$minver")
-                opts="${optarray[*]}"
-            fi
-
-            mkdir -p "$stage/lib/release"
-            rm -rf Resources/ ../Resources tests/Resources/
-
-            cmake ../${MINIZLIB_SOURCE_DIR} -GXcode \
+            cmake ${top}/${MINIZLIB_SOURCE_DIR} -G "Ninja Multi-Config" \
                   -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
                   "${config[@]}" \
                   -DCMAKE_INSTALL_PREFIX=$stage \
-                  -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
+                  -DCMAKE_INSTALL_LIBDIR="$stage/lib/release" \
+                  -DZLIB_INCLUDE_DIR="${stage}/packages/include/zlib-ng/" \
+                  -DZLIB_LIBRARY="${stage}/packages/lib/release/libz.a" \
+                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} \
+                  -DCMAKE_OSX_ARCHITECTURES="x86_64"
 
             cmake --build . --config Release
 
@@ -122,81 +114,48 @@ pushd "$MINIZLIB_SOURCE_DIR"
                 ctest -C Release
             fi
 
-            mkdir -p "$stage/lib/release"
-            cp -a Release/libminizip*.a* "${stage}/lib/release/"
+            cmake --install . --config Release
 
-            mkdir -p "$stage/include/minizip-ng"
-            cp -a *.h "$stage/include/minizip-ng"
+            mkdir -p $stage/include/minizip-ng
+            mv $stage/include/minizip/*.h "$stage/include/minizip-ng/"
+            popd
         ;;            
 
         # -------------------------- linux, linux64 --------------------------
         linux*)
-
-            # Linux build environment at Linden comes pre-polluted with stuff that can
-            # seriously damage 3rd-party builds.  Environmental garbage you can expect
-            # includes:
-            #
-            #    DISTCC_POTENTIAL_HOSTS     arch           root        CXXFLAGS
-            #    DISTCC_LOCATION            top            branch      CC
-            #    DISTCC_HOSTS               build_name     suffix      CXX
-            #    LSDISTCC_ARGS              repo           prefix      CFLAGS
-            #    cxx_version                AUTOBUILD      SIGN        CPPFLAGS
-            #
-            # So, clear out bits that shouldn't affect our configure-directed build
-            # but which do nonetheless.
-            #
-            unset DISTCC_HOSTS CC CXX CFLAGS CPPFLAGS CXXFLAGS
-
-            # Prefer gcc-4.6 if available.
-            if [[ -x /usr/bin/gcc-4.6 && -x /usr/bin/g++-4.6 ]]; then
-                export CC=/usr/bin/gcc-4.6
-                export CXX=/usr/bin/g++-4.6
-            fi
-
             # Prefer out of source builds
-            rm -rf build
             mkdir -p build
-            pushd build
+            pushd "build"
         
             # Default target per autobuild build --address-size
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
-            # Handle any deliberate platform targeting
-            if [ ! "${TARGET_CPPFLAGS:-}" ]; then
-                # Remove sysroot contamination from build environment
-                unset CPPFLAGS
-            else
-                # Incorporate special pre-processing flags
-                export CPPFLAGS="$TARGET_CPPFLAGS"
-            fi
-
-            cmake ${top}/${MINIZLIB_SOURCE_DIR} -G"Unix Makefiles" \
+            cmake ${top}/${MINIZLIB_SOURCE_DIR} -G"Ninja" \
                   -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
                   -DCMAKE_CXX_FLAGS:STRING="$opts" \
                   "${config[@]}" \
                   -DCMAKE_INSTALL_PREFIX=$stage \
-                  -DZLIB_INCLUDE_DIRS="$stage/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARIES="$stage/packages/lib/release/libz.a"
+                  -DCMAKE_INSTALL_LIBDIR="$stage/lib/release" \
+                  -DZLIB_INCLUDE_DIR="${stage}/packages/include/zlib-ng/" \
+                  -DZLIB_LIBRARY="${stage}/packages/lib/release/libz.a"
 
-            cmake --build . --parallel 8  --config Release
+            cmake --build . --config Release
 
             # conditionally run unit tests
             if [ "${DISABLE_UNIT_TESTS:-0}" -eq 0 ]; then
                 ctest -C Release
             fi
 
-            mkdir -p "$stage/lib/release"
-            cp -a libminizip*.a* "${stage}/lib/release/"
+            cmake --install . --config Release
 
-            mkdir -p "$stage/include/minizip-ng"
-            cp -a ${top}/${MINIZLIB_SOURCE_DIR}/*.h "$stage/include/minizip-ng"
-
-        popd
+            mkdir -p $stage/include/minizip-ng
+            mv $stage/include/minizip/*.h "$stage/include/minizip-ng/"
+            popd
         ;;
     esac
 
     mkdir -p "$stage/LICENSES"
-    cp LICENSE "$stage/LICENSES/minizip-ng.txt"
+    cp ${top}/${MINIZLIB_SOURCE_DIR}/LICENSE "$stage/LICENSES/minizip-ng.txt"
 popd
 
 mkdir -p "$stage"/docs/minizip-ng/
