@@ -73,7 +73,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DZLIB_INCLUDE_DIR="$(cygpath -m "$stage/packages/include/zlib-ng/")" \
                   -DZLIB_LIBRARY="$(cygpath -m "$stage/packages/lib/release/zlib.lib")"
 
-            cmake --build . --config Release
+            cmake --build . --config Release --parallel $AUTOBUILD_CPU_COUNT
 
             # conditionally run unit tests
             if [ "${DISABLE_UNIT_TESTS:-0}" = "0" ]; then
@@ -89,44 +89,52 @@ pushd "$MINIZLIB_SOURCE_DIR"
 
         # ------------------------- darwin, darwin64 -------------------------
         darwin*)
-            mkdir -p "build"
-            pushd "build"
-
             export MACOSX_DEPLOYMENT_TARGET="$LL_BUILD_DARWIN_DEPLOY_TARGET"
 
-            opts="${TARGET_OPTS:--arch $AUTOBUILD_CONFIGURE_ARCH $LL_BUILD_RELEASE}"
+            for arch in x86_64 arm64 ; do
+                ARCH_ARGS="-arch $arch"
+                opts="${TARGET_OPTS:-$ARCH_ARGS $LL_BUILD_RELEASE}"
+                cc_opts="$(remove_cxxstd $opts)"
+                ld_opts="$ARCH_ARGS"
 
-            cmake ${top}/${MINIZLIB_SOURCE_DIR} -G "Ninja Multi-Config" \
-                  -DCMAKE_C_FLAGS:STRING="$(remove_cxxstd $opts)" \
-                  -DCMAKE_CXX_FLAGS:STRING="$opts" \
-                  "${config[@]}" \
-                  -DCMAKE_INSTALL_PREFIX=$stage \
-                  -DCMAKE_INSTALL_LIBDIR="$stage/lib/release" \
-                  -DZLIB_INCLUDE_DIR="${stage}/packages/include/zlib-ng/" \
-                  -DZLIB_LIBRARY="${stage}/packages/lib/release/libz.a" \
-                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} \
-                  -DCMAKE_OSX_ARCHITECTURES="x86_64"
+                mkdir -p "build_$arch"
+                pushd "build_$arch"
+                    CFLAGS="$cc_opts" \
+                    LDFLAGS="$ld_opts" \
+                    cmake ${top}/${MINIZLIB_SOURCE_DIR} -G "Ninja Multi-Config" \
+                        -DCMAKE_C_FLAGS:STRING="$cc_opts" \
+                        -DCMAKE_CXX_FLAGS:STRING="$opts" \
+                        "${config[@]}" \
+                        -DCMAKE_INSTALL_PREFIX="$stage" \
+                        -DCMAKE_INSTALL_LIBDIR="$stage/lib/release/$arch" \
+                        -DZLIB_INCLUDE_DIR="${stage}/packages/include/zlib-ng/" \
+                        -DZLIB_LIBRARY="${stage}/packages/lib/release/libz.a" \
+                        -DCMAKE_OSX_ARCHITECTURES="$arch" \
+                        -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET}
 
-            cmake --build . --config Release
+                    cmake --build . --config Release --parallel $AUTOBUILD_CPU_COUNT
 
-            # conditionally run unit tests
-            if [ "${DISABLE_UNIT_TESTS:-0}" = "0" ]; then
-                ctest -C Release
-            fi
+                    # conditionally run unit tests
+                    if [ "${DISABLE_UNIT_TESTS:-0}" = "0" ]; then
+                        ctest -C Release
+                    fi
 
-            cmake --install . --config Release
+                    cmake --install . --config Release
+                popd
+            done
+
+            lipo -create -output "$stage/lib/release/libminizip.a" "$stage/lib/release/x86_64/libminizip.a" "$stage/lib/release/arm64/libminizip.a"
 
             mkdir -p $stage/include/minizip-ng
             mv $stage/include/minizip/*.h "$stage/include/minizip-ng/"
-            popd
-        ;;            
+        ;;
 
         # -------------------------- linux, linux64 --------------------------
         linux*)
             # Prefer out of source builds
             mkdir -p build
             pushd "build"
-        
+
             # Default target per autobuild build --address-size
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
@@ -139,7 +147,7 @@ pushd "$MINIZLIB_SOURCE_DIR"
                   -DZLIB_INCLUDE_DIR="${stage}/packages/include/zlib-ng/" \
                   -DZLIB_LIBRARY="${stage}/packages/lib/release/libz.a"
 
-            cmake --build . --config Release
+            cmake --build . --config Release --parallel $AUTOBUILD_CPU_COUNT
 
             # conditionally run unit tests
             if [ "${DISABLE_UNIT_TESTS:-0}" -eq 0 ]; then
